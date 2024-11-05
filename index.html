@@ -92,10 +92,10 @@
             }
 
             const xhr = new XMLHttpRequest();
-            const url = "http://localhost:3000/data" + (updateMode ? `/${id}` : "");
+            const url = `https://672a2983976a834dd0226279.mockapi.io/api/vi/data${updateMode ? `/${id}` : ""}`;
             const method = updateMode ? "PUT" : "POST";
             xhr.open(method, url);
-            xhr.setRequestHeader("content-type", "application/json;charset=UTF-8");
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhr.send(JSON.stringify({ id, name, age, city, job }));
             xhr.onload = () => {
                 if (xhr.status === 200 || xhr.status === 201) {
@@ -110,8 +110,8 @@
         function getStudents() {
             const contents = document.getElementById("contents");
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "http://localhost:3000/data");
-            xhr.setRequestHeader("content-type", "application/json");
+            xhr.open("GET", "https://672a2983976a834dd0226279.mockapi.io/api/vi/data");
+            xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send();
             xhr.onload = () => {
                 if (xhr.status === 200) {
@@ -124,20 +124,19 @@
         }
 
         function makeList(data) {
-    let str = "<ul>";
-    for (let item of data) {
-        str += `
-            <li>
-                ${item.name} (${item.age}, ${item.city}, ${item.job}) 
-                <button onclick="openModal({ id: '${item.id}', name: '${item.name}', age: ${item.age}, city: '${item.city}', job: '${item.job}' })">수정</button>
-                <button onclick="deleteData('${item.id}')">삭제</button>
-            </li>
-        `;
-    }
-    str += "</ul>";
-    return str;
-}
-
+            let str = "<ul>";
+            for (let item of data) {
+                str += `
+                    <li>
+                        ${item.name} (${item.age}, ${item.city}, ${item.job}) 
+                        <button onclick="openModal({ id: '${item.id}', name: '${item.name}', age: ${item.age}, city: '${item.city}', job: '${item.job}' })">수정</button>
+                        <button onclick="deleteData('${item.id}')">삭제</button>
+                    </li>
+                `;
+            }
+            str += "</ul>";
+            return str;
+        }
 
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -148,7 +147,7 @@
 
         function deleteData(id) {
             const xhr = new XMLHttpRequest();
-            xhr.open("DELETE", "http://localhost:3000/data/" + id);
+            xhr.open("DELETE", `https://672a2983976a834dd0226279.mockapi.io/api/vi/data/${id}`);
             xhr.send();
             xhr.onload = () => {
                 if (xhr.status === 200) {
