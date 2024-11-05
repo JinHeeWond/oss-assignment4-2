@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX CRUD Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #contents { margin-top: 20px; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Heewon's AJAX CRUD</h1>
+    <button id="btnAddModal" class="btn btn-primary">Add Student</button>
+    <button id="btnStu" class="btn btn-secondary">Show Students</button>
+
+    <!-- 모달 HTML 구조 -->
+    <div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentModalLabel">학생 정보</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="studentId">
+                    <div class="mb-3">
+                        <label for="modalName" class="form-label">Name:</label>
+                        <input type="text" id="modalName" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalAge" class="form-label">Age:</label>
+                        <input type="number" id="modalAge" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalCity" class="form-label">City:</label>
+                        <input type="text" id="modalCity" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalJob" class="form-label">Job:</label>
+                        <input type="text" id="modalJob" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="saveChanges" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contents"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let updateMode = false;
+
+        window.onload = function () {
+            document.getElementById("btnAddModal").addEventListener("click", () => openModal());
+            document.getElementById("btnStu").addEventListener("click", getStudents);
+            document.getElementById("saveChanges").addEventListener("click", saveData);
+            getStudents(); 
+        };
+
+        function openModal(data = {}) {
+            updateMode = !!data.id;
+            document.getElementById("studentId").value = data.id || "";
+            document.getElementById("modalName").value = data.name || "";
+            document.getElementById("modalAge").value = data.age || "";
+            document.getElementById("modalCity").value = data.city || "";
+            document.getElementById("modalJob").value = data.job || "";
+            const modalTitle = document.getElementById("studentModalLabel");
+            modalTitle.textContent = updateMode ? "Edit Student" : "Add Student";
+
+            const modal = new bootstrap.Modal(document.getElementById("studentModal"));
+            modal.show();
+        }
+
+        function saveData() {
+            const id = document.getElementById("studentId").value || generateUUID();
+            const name = document.getElementById("modalName").value;
+            const age = document.getElementById("modalAge").value;
+            const city = document.getElementById("modalCity").value;
+            const job = document.getElementById("modalJob").value;
+
+            if (!name || !age || !city || !job) {
+                alert("모든 필드를 채워야 합니다.");
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            const url = "http://localhost:3000/data" + (updateMode ? `/${id}` : "");
+            const method = updateMode ? "PUT" : "POST";
+            xhr.open(method, url);
+            xhr.setRequestHeader("content-type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({ id, name, age, city, job }));
+            xhr.onload = () => {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    getStudents();
+                    bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
+                } else {
+                    console.log(xhr.status, xhr.statusText);
+                }
+            };
+        }
+
+        function getStudents() {
+            const contents = document.getElementById("contents");
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://localhost:3000/data");
+            xhr.setRequestHeader("content-type", "application/json");
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const res = JSON.parse(xhr.response);
+                    contents.innerHTML = makeList(res);
+                } else {
+                    console.log(xhr.status, xhr.statusText);
+                }
+            };
+        }
+
+        function makeList(data) {
+    let str = "<ul>";
+    for (let item of data) {
+        str += `
+            <li>
+                ${item.name} (${item.age}, ${item.city}, ${item.job}) 
+                <button onclick="openModal({ id: '${item.id}', name: '${item.name}', age: ${item.age}, city: '${item.city}', job: '${item.job}' })">수정</button>
+                <button onclick="deleteData('${item.id}')">삭제</button>
+            </li>
+        `;
+    }
+    str += "</ul>";
+    return str;
+}
+
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function deleteData(id) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("DELETE", "http://localhost:3000/data/" + id);
+            xhr.send();
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    getStudents();
+                } else {
+                    console.log(xhr.status, xhr.statusText);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
